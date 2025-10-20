@@ -7,13 +7,13 @@
 
 ### Tasks:
 
-- [ ] **1.1: Initialize Expo Project**
+- [x] **1.1: Initialize Expo Project**
   - Files to create: `package.json`, `app.json`, `tsconfig.json`
   - Run: `npx create-expo-app@latest messageai --template blank-typescript`
   - Verify dev server runs: `npx expo start`
   - Test on device/simulator
 
-- [ ] **1.2: Install Core Dependencies**
+- [x] **1.2: Install Core Dependencies**
   - Files to update: `package.json`
   - Install messaging dependencies:
     ```bash
