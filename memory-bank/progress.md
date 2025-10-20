@@ -270,21 +270,80 @@
 
 ---
 
+### ✅ PR #5: RTDB Typing Indicators
+**Status:** COMPLETE  
+**Completed:** October 2025
+
+**What was implemented:**
+- created `src/services/rtdb.ts`:
+  - setTyping() - writes to /typing/{cid}/{uid} with timestamp
+  - subscribeToTyping() - listens to /typing/{cid}, returns typing user ids
+  - clearTyping() - utility function to clear typing status
+  - onDisconnect() auto-cleanup prevents orphaned typing states
+  - excludes current user from typing results
+  - comprehensive logging with timestamps
+- created `src/hooks/useTyping.ts`:
+  - subscribes to rtdb typing path on mount
+  - returns array of typing user ids
+  - automatic cleanup on unmount
+  - handles missing conversationId or currentUserId gracefully
+- created `src/components/TypingIndicator.tsx`:
+  - displays "user is typing..." for single user
+  - displays "user1 and user2 are typing..." for two users
+  - displays "user1 and N others are typing..." for 3+ users
+  - animated dots with staggered opacity (creates wave effect)
+  - only renders when someone is typing (returns null otherwise)
+  - positioned above input area in chat
+- integrated into `app/conversation/[id].tsx`:
+  - uses useTyping hook to get typing user ids
+  - fetches display names for typing users (uses cached otherUser for performance)
+  - handleTextChange() updates typing status with 3 second timeout
+  - clears typing on send message
+  - clears typing on unmount
+  - clears typing when input is empty
+  - debounced: only updates rtdb when user types (not on every keystroke)
+  - uses ref to track timeout for proper cleanup
+
+**Files created:**
+- src/services/rtdb.ts
+- src/hooks/useTyping.ts
+- src/components/TypingIndicator.tsx
+
+**Files modified:**
+- app/conversation/[id].tsx
+
+**Git commit:** "pr 5 complete rtdb typing indicators with debounced updates and auto cleanup"
+
+**Success criteria met:**
+- ✅ typing indicator appears when other user types
+- ✅ indicator disappears after 3 seconds of inactivity
+- ✅ indicator cleared immediately on send
+- ✅ indicator cleared on unmount (cleanup)
+- ✅ onDisconnect() auto-cleanup prevents orphaned states
+- ✅ debounced updates (3 second timeout)
+- ✅ animated dots provide visual feedback
+- ✅ user names displayed correctly
+- ✅ no linter errors
+- ✅ typescript strict mode maintained
+
+**Important notes:**
+- rtdb used for ephemeral data (typing indicators) instead of firestore
+- cheaper and faster for high-frequency updates
+- onDisconnect() ensures cleanup if user crashes or loses connection
+- excludes current user from typing results automatically
+- timeout pattern prevents constant rtdb writes
+- typing state automatically cleared on send, unmount, or empty input
+
+---
+
 ## Current Status
 
-**Completed:** 4 of 9 MVP PRs  
-**Next:** PR #5 - RTDB Typing Indicators
+**Completed:** 5 of 9 MVP PRs  
+**Next:** PR #6 - RTDB Presence & Online Status
 
 ---
 
 ## Remaining MVP PRs
-
-### 📋 PR #5: RTDB Typing Indicators
-- create rtdb.ts service
-- setTyping() and subscribeToTyping()
-- useTyping hook
-- TypingIndicator component
-- integrate into chat screen
 
 ### 📋 PR #6: RTDB Presence & Online Status
 - add presence functions to rtdb.ts

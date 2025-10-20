@@ -2,38 +2,32 @@
 
 ## Current Session Focus
 
-**Working on:** PR #4 just completed, ready for PR #5  
+**Working on:** PR #5 just completed, ready for PR #6  
 **Date:** October 2025
 
 ---
 
 ## What Just Happened
 
-### PR #4 Completed: Chat Screen with Real-Time Messages ✅
+### PR #5 Completed: RTDB Typing Indicators ✅
 
 successfully implemented:
-- message crud operations in firestore service (sendMessage, subscribeToMessages, getMessages, getConversationMembers)
-- useMessages hook with real-time listener and automatic cleanup
-- MessageBubble component with sender/receiver styling, timestamps, status indicators
-- full chat screen with inverted FlatList, text input, send button, KeyboardAvoidingView
-- optimistic UI: messages appear instantly from Firestore local cache
-- read receipts: lastSeenAt updated on mount, isRead computed client-side
-- comprehensive logging with timestamps at every step
-- loading and error states
-- empty state for new conversations
+- rtdb service with typing indicator functions (setTyping, subscribeToTyping, clearTyping)
+- onDisconnect() auto-cleanup prevents orphaned typing states
+- useTyping hook with real-time listener and automatic cleanup
+- TypingIndicator component with animated dots and user name display
+- integrated into chat screen with debounced updates (3 second timeout)
+- clears typing on send, unmount, or empty input
+- fetches and displays user names for typing users
+- comprehensive logging with timestamps
 
 all files created and working:
-- src/hooks/useMessages.ts
-- src/components/MessageBubble.tsx
-- .firebaserc
-- firebase.json
-- firestore.indexes.json
-- firestore.rules
+- src/services/rtdb.ts
+- src/hooks/useTyping.ts
+- src/components/TypingIndicator.tsx
 
 all files modified:
-- src/services/firestore.ts (added message operations)
-- app/conversation/[id].tsx (full implementation)
-- app/(auth)/register.tsx (fixed linter error)
+- app/conversation/[id].tsx (integrated typing indicators)
 
 no linter errors, typescript strict mode enforced
 
@@ -65,9 +59,9 @@ firebase deploy --only firestore:indexes
 **Branch:** main (no feature branches yet)  
 **Clean working directory** - all changes committed
 
-**Last commit:** "pr 4 complete chat screen with real time messaging optimistic ui and read receipts"
+**Last commit:** "pr 5 complete rtdb typing indicators with debounced updates and auto cleanup"
 
-**Commits ahead of origin:** 3 commits (PR #2, PR #3, PR #4)
+**Commits ahead of origin:** 6 commits (PR #2, PR #3, PR #4, PR #4 fix, PR #5)
 
 ---
 
@@ -81,39 +75,39 @@ firebase deploy --only firestore:indexes
 5. test offline mode (messages queue and sync)
 6. create composite index if not already deployed
 
-### PR #5: RTDB Typing Indicators
+### PR #6: RTDB Presence & Online Status
 
-**priority:** high importance (enhances ux significantly)
+**priority:** high importance (user awareness)
 
 tasks:
-1. create src/services/rtdb.ts:
-   - setTyping(cid, uid, isTyping) - write to /typing/{cid}/{uid}
-   - subscribeToTyping(cid, callback) - listen to /typing/{cid}
-   - use onDisconnect() for auto-cleanup
-   - debounce typing updates (300ms)
-2. create useTyping hook:
-   - listen to rtdb typing path
-   - return array of typing user ids
+1. extend src/services/rtdb.ts:
+   - setUserOnline(uid) - write to /presence/{uid} with timestamp
+   - setUserOffline(uid) - remove from /presence/{uid}
+   - subscribeToPresence(uid, callback) - listen to user's online status
+   - subscribeToMultiplePresence(uids, callback) - listen to multiple users
+   - use onDisconnect() for auto-cleanup when app closes
+2. create usePresence hook:
+   - listen to rtdb presence path
+   - return online status for user(s)
    - automatic cleanup on unmount
-3. create TypingIndicator component:
-   - shows "user is typing..." or "user1, user2 are typing..."
-   - animated dots (... ••• •••)
-   - positioned above input area in chat
-4. integrate into chat screen:
-   - call setTyping(true) on text input change (debounced)
-   - call setTyping(false) on send or blur
-   - display TypingIndicator when others typing
-5. handle edge cases:
-   - multiple users typing at once
-   - user disconnects while typing
-   - switch between conversations
+3. integrate into auth context:
+   - set online on login/app foreground
+   - set offline on logout/app background
+   - use app state listener for foreground/background detection
+4. display in conversation list:
+   - show green dot for online users
+   - show "active now" or "active Xm ago"
+   - update ConversationItem component
+5. display in chat header:
+   - show online status in header
+   - "online" or "active Xm ago"
 
 **success criteria:**
-- typing indicator appears when other user types
-- indicator disappears when user stops typing
+- online status appears for active users
+- status updates in real-time
 - auto-cleanup on disconnect works
-- no lag or performance issues
-- works for both 1-on-1 and group chats
+- displays in conversation list and chat header
+- works across app lifecycle (foreground/background)
 
 ---
 

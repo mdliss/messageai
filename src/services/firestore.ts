@@ -188,7 +188,7 @@ export async function updateConversationLastMessage(
   lastMessage: {
     text: string;
     senderId: string;
-    type: 'text' | 'image';
+    type: 'text' | 'image' | 'ai';
     createdAt: string;
   }
 ): Promise<void> {

@@ -49,7 +49,7 @@ export default function ConversationScreen() {
   const [typingUserNames, setTypingUserNames] = useState<string[]>([]);
 
   const flatListRef = useRef<FlatList>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   console.log('[conversation] timestamp:', new Date().toISOString(), '- screen rendered for conversation:', id);
   console.log('[conversation] current user:', currentUser?.uid);

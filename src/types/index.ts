@@ -49,7 +49,7 @@ export interface Conversation {
   lastMessage: {
     text: string;
     senderId: string;
-    type: string;
+    type: 'text' | 'image' | 'ai';
     createdAt: string;
   } | null;
   lastMessageAt: string | null;

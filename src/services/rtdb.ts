@@ -4,12 +4,12 @@
  */
 
 import {
-  onDisconnect,
-  onValue,
-  ref,
-  remove,
-  serverTimestamp,
-  set,
+    onDisconnect,
+    onValue,
+    ref,
+    remove,
+    serverTimestamp,
+    set,
 } from 'firebase/database';
 import { rtdb } from './firebase';
 
