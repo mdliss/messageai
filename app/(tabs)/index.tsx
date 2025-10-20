@@ -3,19 +3,19 @@
  * displays all user's conversations with real-time updates
  */
 
+import { ConversationItem } from '@/src/components/ConversationItem';
+import { useConversations } from '@/src/hooks/useConversations';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { router } from 'expo-router';
-import { useConversations } from '@/src/hooks/useConversations';
-import { ConversationItem } from '@/src/components/ConversationItem';
 
 export default function ConversationsListScreen() {
   const { conversations, loading, error } = useConversations();

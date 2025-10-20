@@ -4,23 +4,21 @@
  */
 
 import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  Timestamp,
-  addDoc,
-  updateDoc,
-  serverTimestamp,
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    onSnapshot,
+    orderBy,
+    query,
+    setDoc,
+    updateDoc,
+    where
 } from 'firebase/firestore';
-import { firestore } from './firebase';
 import { Conversation, ConversationMember } from '../types';
+import { firestore } from './firebase';
 
 /**
  * get user's conversations (one-time fetch)

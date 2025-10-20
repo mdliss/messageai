@@ -3,19 +3,19 @@
  * displays conversation preview in the conversations list
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from 'react-native';
 import { router } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useAuth } from '../hooks/useAuth';
 import { firestore } from '../services/firebase';
 import { Conversation, User } from '../types';
-import { useAuth } from '../hooks/useAuth';
 
 interface ConversationItemProps {
   conversation: Conversation;

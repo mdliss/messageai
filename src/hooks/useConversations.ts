@@ -3,9 +3,9 @@
  * subscribes to user's conversations in real-time
  */
 
-import { useState, useEffect } from 'react';
-import { Conversation } from '../types';
+import { useEffect, useState } from 'react';
 import { subscribeToConversations } from '../services/firestore';
+import { Conversation } from '../types';
 import { useAuth } from './useAuth';
 
 export function useConversations() {

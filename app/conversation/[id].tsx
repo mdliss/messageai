@@ -3,9 +3,9 @@
  * will display messages and allow sending in pr #4
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

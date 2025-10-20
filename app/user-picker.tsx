@@ -3,23 +3,23 @@
  * allows user to select another user to start a conversation with
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Alert,
-} from 'react-native';
-import { router, Stack } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { firestore } from '@/src/services/firebase';
 import { useAuth } from '@/src/hooks/useAuth';
-import { User } from '@/src/types';
+import { firestore } from '@/src/services/firebase';
 import { createConversation } from '@/src/services/firestore';
+import { User } from '@/src/types';
+import { router, Stack } from 'expo-router';
+import { collection, getDocs } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 export default function UserPickerScreen() {
   const { currentUser } = useAuth();
