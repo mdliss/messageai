@@ -27,7 +27,7 @@
   - Files to create: `app/_layout.tsx`, `app/index.tsx`
   - Set up file-based routing structure
 
-- [ ] **1.4: Set Up Firebase Project**
+- [x] **1.4: Set Up Firebase Project**
   - Create Firebase project in console: "messageai-prod"
   - Enable Authentication (Email/Password + Google provider)
   - Create Cloud Firestore database (start in test mode)
@@ -36,7 +36,7 @@
   - Enable Cloud Messaging (FCM)
   - Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
 
-- [ ] **1.5: Configure Environment Variables**
+- [x] **1.5: Configure Environment Variables**
   - Files to create: `.env`, `.env.example`
   - Add Firebase config keys:
     ```
@@ -77,12 +77,12 @@
 
 **PR Checklist:**
 
-- [ ] Expo dev server runs successfully
-- [ ] Firebase initializes without errors
-- [ ] Firestore offline persistence enabled
-- [ ] Can view app on iOS simulator OR Android emulator OR physical device
-- [ ] `.env` is in `.gitignore`
-- [ ] README has clear setup instructions
+- [x] Expo dev server runs successfully
+- [x] Firebase initializes without errors
+- [x] Firestore offline persistence enabled
+- [x] Can view app on iOS simulator OR Android emulator OR physical device
+- [x] `.env` is in `.gitignore`
+- [x] README has clear setup instructions
 
 ---
 
@@ -143,7 +143,7 @@
   - "Logout" button
   - Confirm logout with alert
 
-- [ ] **2.8: Test Authentication Flow**
+- [x] **2.8: Test Authentication Flow**
   - Create new account with email/password
   - Login with existing account
   - Test Google Sign-In (requires physical device or setup)
@@ -152,14 +152,14 @@
 
 **PR Checklist:**
 
-- [ ] Can create new account with email/password
-- [ ] Display name auto-generated from email prefix
-- [ ] Can login with existing credentials
-- [ ] Can logout successfully
-- [ ] Auth state persists on app restart
-- [ ] Google Sign-In works (test on physical device if possible)
-- [ ] Error messages display for invalid credentials
-- [ ] User document created in Firestore `/users/{uid}`
+- [x] Can create new account with email/password
+- [x] Display name auto-generated from email prefix
+- [x] Can login with existing credentials
+- [x] Can logout successfully
+- [x] Auth state persists on app restart
+- [x] Google Sign-In works (test on physical device if possible)
+- [x] Error messages display for invalid credentials
+- [x] User document created in Firestore `/users/{uid}`
 
 ---
 
@@ -170,59 +170,59 @@
 
 ### Tasks:
 
-- [ ] **3.1: Create Firestore Service for Conversations**
+- [x] **3.1: Create Firestore Service for Conversations**
   - Files to create: `src/services/firestore.ts`
   - Function: `getUserConversations(userId)` - Query Firestore with `array-contains`
   - Function: `subscribeToConversations(userId, callback)` - Real-time listener
   - Function: `createConversation(memberIds, isGroup, title)` - Create new conversation
 
-- [ ] **3.2: Create useConversations Hook**
+- [x] **3.2: Create useConversations Hook**
   - Files to create: `src/hooks/useConversations.ts`
   - Subscribe to Firestore on mount (with cleanup)
   - Query: `where('memberIds', 'array-contains', uid)`
   - Return: `conversations` array, `loading`, `error`
 
-- [ ] **3.3: Build Conversation Item Component**
+- [x] **3.3: Build Conversation Item Component**
   - Files to create: `src/components/ConversationItem.tsx`
   - Resolve participant names/photos from `/users/{uid}` (fetch on render)
   - Display: participant photo, name, last message preview, timestamp
   - Show unread count badge (compute from `members/{uid}.lastSeenAt`)
   - Tap to navigate to chat screen
 
-- [ ] **3.4: Compute Unread Count**
+- [x] **3.4: Compute Unread Count**
   - Function: `getUnreadCount(cid, uid)` in `firestore.ts`
   - Fetch `conversations/{cid}/members/{uid}` document
   - Query messages where `createdAt > lastSeenAt`
   - Count results
   - Return number
 
-- [ ] **3.5: Build Conversations List Screen**
+- [x] **3.5: Build Conversations List Screen**
   - Files to create: `app/(tabs)/index.tsx`
   - FlatList of ConversationItem components
   - Pull-to-refresh
   - Empty state: "No conversations yet"
   - Floating action button: "New Message" (navigate to user picker)
 
-- [ ] **3.6: Handle Conversation Creation**
+- [x] **3.6: Handle Conversation Creation**
   - Function: `createConversation(memberIds, isGroup, title)` in `firestore.ts`
   - Create conversation doc in Firestore `/conversations/{cid}`
   - Create member docs: `/conversations/{cid}/members/{uid}` for each member
   - Navigate to chat screen after creation
 
-- [ ] **3.7: Implement User Picker (Simple)**
+- [x] **3.7: Implement User Picker (Simple)**
   - Files to create: `app/user-picker.tsx`
   - List all users (query Firestore `/users`)
   - Tap user → create conversation → navigate to chat
 
 **PR Checklist:**
 
-- [ ] Conversation list displays correctly
-- [ ] Last message preview shows
-- [ ] Unread count badge appears (computed from `lastSeenAt`)
-- [ ] Can tap conversation to open chat
-- [ ] Can create new conversation with user picker
-- [ ] Empty state shows when no conversations
-- [ ] Real-time listener updates list when new message arrives
+- [x] Conversation list displays correctly
+- [x] Last message preview shows
+- [x] Unread count badge appears (computed from `lastSeenAt`)
+- [x] Can tap conversation to open chat
+- [x] Can create new conversation with user picker
+- [x] Empty state shows when no conversations
+- [x] Real-time listener updates list when new message arrives
 
 ---
 
@@ -233,27 +233,27 @@
 
 ### Tasks:
 
-- [ ] **4.1: Create Firestore Service for Messages**
+- [x] **4.1: Create Firestore Service for Messages**
   - Files to update: `src/services/firestore.ts`
   - Function: `sendMessage(cid, message)` - Write to Firestore (optimistic)
   - Function: `subscribeToMessages(cid, callback)` - Real-time listener
   - Function: `updateLastSeenAt(cid, uid)` - Update member's `lastSeenAt`
 
-- [ ] **4.2: Create useMessages Hook**
+- [x] **4.2: Create useMessages Hook**
   - Files to create: `src/hooks/useMessages.ts`
   - Subscribe to Firestore messages on mount
   - Query: `orderBy('createdAt', 'desc').limit(50)` (pagination)
   - Listen to local cache first (instant UI)
   - Return: `messages`, `sendMessage()`, `loading`
 
-- [ ] **4.3: Build Message Bubble Component**
+- [x] **4.3: Build Message Bubble Component**
   - Files to create: `src/components/MessageBubble.tsx`
   - Props: `message`, `isOwnMessage`, `isRead`
   - Display: sender name (if not own), text, timestamp
   - Different styles for own vs other messages (right-aligned vs left-aligned)
   - Status indicators: checkmark (sent), blue double checkmark (read)
 
-- [ ] **4.4: Build Chat Screen**
+- [x] **4.4: Build Chat Screen**
   - Files to create: `app/conversation/[id].tsx`
   - Use `useLocalSearchParams()` to get conversation ID
   - FlatList of MessageBubble components (inverted for chat UX)
@@ -261,7 +261,7 @@
   - Load more messages on scroll (pagination)
   - Update `lastSeenAt` on mount (mark as read)
 
-- [ ] **4.5: Implement Optimistic UI Updates**
+- [x] **4.5: Implement Optimistic UI Updates**
   - On send:
     1. Call Firestore `addDoc()` (returns immediately)
     2. Message appears in UI from local cache (<100ms)
@@ -269,20 +269,20 @@
     4. Firestore syncs to server in background
     5. Listener fires again when server confirms (update UI)
 
-- [ ] **4.6: Compute Read Status Client-Side**
+- [x] **4.6: Compute Read Status Client-Side**
   - Fetch `conversations/{cid}/members/{uid}` for all members
   - For each message: `isRead = member.lastSeenAt >= message.createdAt`
   - Update UI: Single checkmark (sent) → Blue double checkmark (read)
 
 **PR Checklist:**
 
-- [ ] Can send text messages
-- [ ] Messages appear instantly (optimistic UI from cache)
-- [ ] Messages from other user appear in real-time
-- [ ] Message status indicators work (sent → read)
-- [ ] Chat scrolls to bottom on new message
-- [ ] Pagination loads older messages
-- [ ] `lastSeenAt` updates when conversation opened
+- [x] Can send text messages
+- [x] Messages appear instantly (optimistic UI from cache)
+- [x] Messages from other user appear in real-time
+- [x] Message status indicators work (sent → read)
+- [x] Chat scrolls to bottom on new message
+- [x] Pagination loads older messages
+- [x] `lastSeenAt` updates when conversation opened
 
 ---
 
@@ -293,13 +293,13 @@
 
 ### Tasks:
 
-- [ ] **5.1: Create RTDB Service**
+- [x] **5.1: Create RTDB Service**
   - Files to create: `src/services/rtdb.ts`
   - Function: `setTyping(cid, uid, isTyping)` - Write to `/typing/{cid}/{uid}`
   - Function: `subscribeToTyping(cid, callback)` - Listen to `/typing/{cid}`
   - Use `onDisconnect()` to auto-cleanup typing state
 
-- [ ] **5.2: Create useTyping Hook**
+- [x] **5.2: Create useTyping Hook**
   - Files to create: `src/hooks/useTyping.ts`
   - Track text input changes (debounced 300ms)
   - Call `setTyping(cid, uid, true)` when user types
@@ -307,13 +307,13 @@
   - Subscribe to RTDB for other users' typing status
   - Return: `typingUsers` array (exclude current user)
 
-- [ ] **5.3: Build Typing Indicator Component**
+- [x] **5.3: Build Typing Indicator Component**
   - Files to create: `src/components/TypingIndicator.tsx`
   - Display: "Alice is typing..." (1 user)
   - Display: "Alice, Bob are typing..." (2+ users)
   - Animated dots (...)
 
-- [ ] **5.4: Integrate into Chat Screen**
+- [x] **5.4: Integrate into Chat Screen**
   - Files to update: `app/conversation/[id].tsx`
   - Add useTyping hook
   - Render TypingIndicator component above text input
@@ -321,11 +321,11 @@
 
 **PR Checklist:**
 
-- [ ] Typing indicator appears within 100ms
-- [ ] Typing indicator disappears after 3s inactivity
-- [ ] Works with multiple users typing simultaneously
-- [ ] Uses RTDB (not Firestore)
-- [ ] `onDisconnect()` cleanup works (no stale indicators)
+- [x] Typing indicator appears within 100ms
+- [x] Typing indicator disappears after 3s inactivity
+- [x] Works with multiple users typing simultaneously
+- [x] Uses RTDB (not Firestore)
+- [x] `onDisconnect()` cleanup works (no stale indicators)
 
 ---
 
@@ -1037,13 +1037,13 @@
 
 ### Core Messaging:
 
-- [ ] User authentication (email/password + Google)
-- [ ] One-on-one messaging
-- [ ] Real-time message delivery (<500ms via Firestore listeners)
-- [ ] Optimistic UI updates (<100ms from local cache)
-- [ ] Message persistence (Firestore offline persistence)
-- [ ] Read receipts (computed from `lastSeenAt`)
-- [ ] Typing indicators (RTDB, <100ms)
+- [x] User authentication (email/password + Google)
+- [x] One-on-one messaging
+- [x] Real-time message delivery (<500ms via Firestore listeners)
+- [x] Optimistic UI updates (<100ms from local cache)
+- [x] Message persistence (Firestore offline persistence)
+- [x] Read receipts (computed from `lastSeenAt`)
+- [x] Typing indicators (RTDB, <100ms)
 - [ ] Online/offline presence (RTDB, <200ms)
 - [ ] Group chat (3+ users)
 - [ ] Image sharing
@@ -1060,17 +1060,17 @@
 
 ### Performance Targets:
 
-- [ ] Message send latency: <100ms (optimistic UI)
-- [ ] Message delivery: <500ms (online recipients)
-- [ ] App cold start: <2 seconds
-- [ ] Typing indicator: <100ms (RTDB)
+- [x] Message send latency: <100ms (optimistic UI)
+- [x] Message delivery: <500ms (online recipients)
+- [x] App cold start: <2 seconds
+- [x] Typing indicator: <100ms (RTDB)
 - [ ] AI feature response: <3 seconds
 
 ### Testing Scenarios:
 
-- [ ] 2 users chatting in real-time
+- [x] 2 users chatting in real-time
 - [ ] Offline send/receive works (Firestore queues automatically)
 - [ ] App force-quit preserves state (offline persistence)
 - [ ] Group chat with 3+ users
 - [ ] All AI features generate accurate results
-- [ ] RTDB typing/presence updates in <200ms
+- [x] RTDB typing/presence updates in <200ms

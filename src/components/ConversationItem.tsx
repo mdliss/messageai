@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { usePresence } from '../hooks/usePresence';
 import { firestore } from '../services/firebase';
 import { Conversation, User } from '../types';
 
@@ -24,7 +25,11 @@ interface ConversationItemProps {
 export function ConversationItem({ conversation }: ConversationItemProps) {
   const { currentUser } = useAuth();
   const [otherUser, setOtherUser] = useState<User | null>(null);
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // subscribe to presence for other user
+  const presence = usePresence(otherUserId);
 
   console.log('[conversationitem] timestamp:', new Date().toISOString(), '- rendering conversation:', conversation.cid);
 
@@ -35,16 +40,19 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
 
       try {
         // find the other user's id (not the current user)
-        const otherUserId = conversation.memberIds.find(id => id !== currentUser.uid);
+        const foundOtherUserId = conversation.memberIds.find(id => id !== currentUser.uid);
         
-        if (!otherUserId) {
+        if (!foundOtherUserId) {
           console.log('[conversationitem] timestamp:', new Date().toISOString(), '- no other user found');
           setLoading(false);
           return;
         }
 
-        console.log('[conversationitem] timestamp:', new Date().toISOString(), '- fetching user:', otherUserId);
-        const userRef = doc(firestore, 'users', otherUserId);
+        // store other user id for presence subscription
+        setOtherUserId(foundOtherUserId);
+
+        console.log('[conversationitem] timestamp:', new Date().toISOString(), '- fetching user:', foundOtherUserId);
+        const userRef = doc(firestore, 'users', foundOtherUserId);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
@@ -140,6 +148,15 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
             </Text>
           </View>
         )}
+        {/* presence indicator - only show for one-on-one chats */}
+        {!conversation.isGroup && otherUserId && (
+          <View
+            style={[
+              styles.presenceIndicator,
+              presence.online ? styles.presenceOnline : styles.presenceOffline,
+            ]}
+          />
+        )}
       </View>
 
       <View style={styles.contentContainer}>
@@ -180,6 +197,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginRight: 12,
+    position: 'relative',
   },
   avatar: {
     width: 50,
@@ -198,6 +216,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  presenceIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  presenceOnline: {
+    backgroundColor: '#4CD964',
+  },
+  presenceOffline: {
+    backgroundColor: '#999',
   },
   contentContainer: {
     flex: 1,

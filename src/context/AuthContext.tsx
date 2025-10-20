@@ -4,11 +4,13 @@
  */
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from '../services/firebase';
 import { User, AuthContextValue } from '../types';
 import * as authService from '../services/auth';
+import { setUserOnline, setUserOffline } from '../services/rtdb';
 
 // create auth context with default undefined value
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -53,6 +55,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.warn('[authcontext] timestamp:', new Date().toISOString(), '- user profile not found in firestore');
             setUserProfile(null);
           }
+
+          // set user as online in rtdb
+          console.log('[authcontext] timestamp:', new Date().toISOString(), '- setting user online in rtdb');
+          await setUserOnline(user.uid);
         } catch (error) {
           console.error('[authcontext] timestamp:', new Date().toISOString(), '- error fetching user profile:', error);
           setUserProfile(null);
@@ -70,6 +76,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       unsubscribe();
     };
   }, []);
+
+  // handle app state changes (background/foreground)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    console.log('[authcontext] timestamp:', new Date().toISOString(), '- setting up app state listener');
+
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      console.log('[authcontext] timestamp:', new Date().toISOString(), '- app state changed to:', nextAppState);
+
+      if (nextAppState === 'active') {
+        // app came to foreground - set user online
+        console.log('[authcontext] timestamp:', new Date().toISOString(), '- app active, setting user online');
+        await setUserOnline(currentUser.uid);
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // app went to background - set user offline
+        console.log('[authcontext] timestamp:', new Date().toISOString(), '- app background/inactive, setting user offline');
+        await setUserOffline(currentUser.uid);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    // cleanup on unmount
+    return () => {
+      console.log('[authcontext] timestamp:', new Date().toISOString(), '- cleaning up app state listener');
+      subscription.remove();
+    };
+  }, [currentUser]);
 
   /**
    * sign up with email and password
@@ -129,6 +164,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[authcontext] timestamp:', new Date().toISOString(), '- signout requested');
     setLoading(true);
     try {
+      // set user offline in rtdb before signing out
+      if (currentUser) {
+        console.log('[authcontext] timestamp:', new Date().toISOString(), '- setting user offline in rtdb');
+        await setUserOffline(currentUser.uid);
+      }
+
       await authService.signOut();
       console.log('[authcontext] timestamp:', new Date().toISOString(), '- signout completed');
     } catch (error) {

@@ -24,6 +24,7 @@ import TypingIndicator from '../../src/components/TypingIndicator';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useConversationMembers } from '../../src/hooks/useConversationMembers';
 import { useMessages } from '../../src/hooks/useMessages';
+import { usePresence } from '../../src/hooks/usePresence';
 import { useTyping } from '../../src/hooks/useTyping';
 import { firestore } from '../../src/services/firebase';
 import {
@@ -43,11 +44,15 @@ export default function ConversationScreen() {
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherUser, setOtherUser] = useState<User | null>(null);
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [conversationLoading, setConversationLoading] = useState(true);
   
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [typingUserNames, setTypingUserNames] = useState<string[]>([]);
+
+  // subscribe to other user's presence
+  const presence = usePresence(otherUserId);
 
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,12 +83,13 @@ export default function ConversationScreen() {
 
         // fetch other user's details for 1-on-1 chat
         if (!conv.isGroup) {
-          const otherUserId = conv.memberIds.find((uid) => uid !== currentUser.uid);
-          if (otherUserId) {
-            const userDoc = await getDoc(doc(firestore, 'users', otherUserId));
+          const foundOtherUserId = conv.memberIds.find((uid) => uid !== currentUser.uid);
+          if (foundOtherUserId) {
+            setOtherUserId(foundOtherUserId); // store for presence subscription
+            const userDoc = await getDoc(doc(firestore, 'users', foundOtherUserId));
             if (userDoc.exists()) {
               setOtherUser({ ...userDoc.data(), uid: userDoc.id } as User);
-              console.log('[conversation] timestamp:', new Date().toISOString(), '- other user loaded:', otherUserId);
+              console.log('[conversation] timestamp:', new Date().toISOString(), '- other user loaded:', foundOtherUserId);
             }
           }
         }
@@ -361,6 +367,42 @@ export default function ConversationScreen() {
     return 'chat';
   };
 
+  // format last seen time
+  const formatLastSeen = (timestamp: number | null): string => {
+    if (!timestamp) return 'offline';
+    
+    try {
+      const now = Date.now();
+      const diffMs = now - timestamp;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'last seen just now';
+      if (diffMins < 60) return `last seen ${diffMins}m ago`;
+      if (diffHours < 24) return `last seen ${diffHours}h ago`;
+      if (diffDays < 7) return `last seen ${diffDays}d ago`;
+      
+      return 'offline';
+    } catch (error) {
+      console.error('[conversation] error formatting last seen:', error);
+      return 'offline';
+    }
+  };
+
+  // get presence subtitle for header
+  const getPresenceSubtitle = (): string => {
+    if (conversation?.isGroup) return '';
+    if (!otherUserId) return '';
+    
+    if (presence.online) {
+      return 'online';
+    } else if (presence.lastSeen) {
+      return formatLastSeen(presence.lastSeen);
+    }
+    return 'offline';
+  };
+
   // render loading state
   if (conversationLoading || messagesLoading || membersLoading) {
     return (
@@ -401,6 +443,23 @@ export default function ConversationScreen() {
         options={{
           title: getHeaderTitle(),
           headerBackTitle: 'back',
+          headerTitleStyle: {
+            fontSize: 17,
+            fontWeight: '600',
+          },
+          // show presence subtitle for 1-on-1 chats
+          ...((!conversation?.isGroup && otherUserId) && {
+            headerTitle: () => (
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: '#000' }}>
+                  {getHeaderTitle()}
+                </Text>
+                <Text style={{ fontSize: 12, color: presence.online ? '#4CD964' : '#999', marginTop: 2 }}>
+                  {getPresenceSubtitle()}
+                </Text>
+              </View>
+            ),
+          }),
         }}
       />
 
