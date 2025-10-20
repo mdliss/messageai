@@ -192,28 +192,51 @@ useEffect(() => {
 /conversations/{cid}/members/{uid}
 {
   uid: "user123",
-  lastSeenAt: Timestamp  // updated when user opens conversation
+  joinedAt: Timestamp,
+  lastSeenAt: Timestamp,  // CRITICAL: initialize to epoch (1970-01-01) on creation
+  muted: boolean
 }
 
-// compute client-side
+// compute client-side with real-time subscription
 const isRead = member.lastSeenAt >= message.createdAt;
 ```
 
 **implementation:**
 ```typescript
+// CRITICAL: initialize lastSeenAt to epoch on conversation creation
+const epoch = new Date(0).toISOString(); // 1970-01-01
+const memberData = {
+  uid: memberId,
+  joinedAt: now,
+  lastSeenAt: epoch,  // ensures messages only marked read after user actually views
+  muted: false
+};
+
+// subscribe to members in real-time (not one-time fetch)
+const unsubscribe = onSnapshot(membersRef, (snapshot) => {
+  const members = snapshot.docs.map(doc => doc.data());
+  setMembers(members);
+});
+
 // update when user opens conversation
 await updateLastSeenAt(conversationId, currentUser.uid);
 
 // compute read status for each message
-messages.forEach(message => {
-  const isRead = members.every(member => 
-    member.lastSeenAt >= message.createdAt
+const isMessageRead = (message) => {
+  const otherMembers = members.filter(m => m.uid !== currentUser.uid);
+  return otherMembers.every(member => 
+    new Date(member.lastSeenAt).getTime() >= new Date(message.createdAt).getTime()
   );
-  
-  // show appropriate icon
-  message.icon = isRead ? '✓✓' : '✓';  // blue if read
-});
+};
+
+// show appropriate icon
+const icon = isRead ? '✓✓' : '✓';  // blue double check if read, single check if not
 ```
+
+**why epoch initialization matters:**
+- if you set lastSeenAt to current time on creation, messages sent immediately after appear as "read"
+- epoch ensures messages only show as read after user actually opens the chat
+- real-time members subscription ensures status updates instantly when other user views
 
 ---
 
