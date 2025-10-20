@@ -19,39 +19,38 @@ export default function TypingIndicator({ typingUserNames }: TypingIndicatorProp
   useEffect(() => {
     console.log('[TypingIndicator] timestamp:', new Date().toISOString(), '- setting up animation');
 
-    // create staggered dot animation
-    const animateDot = (dot: Animated.Value, delay: number) => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-        ])
-      );
+    // create bouncing dot animation with initial delay
+    const animateDot = (dot: Animated.Value, initialDelay: number) => {
+      // set initial delay before starting the loop
+      Animated.sequence([
+        Animated.delay(initialDelay),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(dot, {
+              toValue: -8,
+              duration: 350,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0,
+              duration: 350,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+      ]).start();
     };
 
-    // start animations with staggered delays
-    const animation1 = animateDot(dot1, 0);
-    const animation2 = animateDot(dot2, 200);
-    const animation3 = animateDot(dot3, 400);
-
-    animation1.start();
-    animation2.start();
-    animation3.start();
+    // start animations with staggered initial delays for wave effect
+    animateDot(dot1, 0);
+    animateDot(dot2, 150);
+    animateDot(dot3, 300);
 
     // cleanup
     return () => {
-      animation1.stop();
-      animation2.stop();
-      animation3.stop();
+      dot1.stopAnimation();
+      dot2.stopAnimation();
+      dot3.stopAnimation();
     };
   }, [dot1, dot2, dot3]);
 
@@ -71,12 +70,13 @@ export default function TypingIndicator({ typingUserNames }: TypingIndicatorProp
     }
   };
 
-  // animated dot opacity
+  // animated dot vertical translation for bounce effect
   const getDotStyle = (dot: Animated.Value) => ({
-    opacity: dot.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.3, 1],
-    }),
+    transform: [
+      {
+        translateY: dot,
+      },
+    ],
   });
 
   return (
