@@ -136,7 +136,7 @@ export default function RegisterScreen() {
               editable={!submitting && !loading}
             />
             <Text style={styles.helperText}>
-              if not provided, we'll use your email prefix
+              if not provided, we will use your email prefix
             </Text>
           </View>
 
