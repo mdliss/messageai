@@ -54,10 +54,8 @@ export default function TypingIndicator({ typingUserNames }: TypingIndicatorProp
     };
   }, [dot1, dot2, dot3]);
 
-  // if no one is typing, don't render anything
-  if (typingUserNames.length === 0) {
-    return null;
-  }
+  // always render container to prevent layout jumping, but hide content if no one is typing
+  const isTyping = typingUserNames.length > 0;
 
   // format typing message based on number of users
   const getTypingMessage = (): string => {
@@ -80,13 +78,17 @@ export default function TypingIndicator({ typingUserNames }: TypingIndicatorProp
   });
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{getTypingMessage()}</Text>
-      <View style={styles.dotsContainer}>
-        <Animated.View style={[styles.dot, getDotStyle(dot1)]} />
-        <Animated.View style={[styles.dot, getDotStyle(dot2)]} />
-        <Animated.View style={[styles.dot, getDotStyle(dot3)]} />
-      </View>
+    <View style={[styles.container, !isTyping && styles.containerHidden]}>
+      {isTyping && (
+        <>
+          <Text style={styles.text}>{getTypingMessage()}</Text>
+          <View style={styles.dotsContainer}>
+            <Animated.View style={[styles.dot, getDotStyle(dot1)]} />
+            <Animated.View style={[styles.dot, getDotStyle(dot2)]} />
+            <Animated.View style={[styles.dot, getDotStyle(dot3)]} />
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -96,8 +98,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    minHeight: 32,
     backgroundColor: '#F8F8F8',
+  },
+  containerHidden: {
+    minHeight: 0,
+    paddingVertical: 0,
   },
   text: {
     fontSize: 13,

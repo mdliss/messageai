@@ -53,10 +53,20 @@ export default function MessageBubble({
   const getStatusIndicator = (): string => {
     if (!isOwnMessage) return '';
     
-    if (isRead) return '✓✓'; // double check (blue in actual UI)
-    if (message.status === 'delivered') return '✓✓'; // double check (gray)
-    if (message.status === 'sent') return '✓'; // single check
-    return ''; // sending
+    // read status takes priority (blue double check)
+    if (isRead) {
+      console.log('[MessageBubble] message is read - showing blue double check');
+      return '✓✓';
+    }
+    
+    // not read yet - show single gray check
+    if (message.status === 'sent' || message.status === 'delivered') {
+      console.log('[MessageBubble] message is sent but not read - showing single check');
+      return '✓';
+    }
+    
+    // still sending
+    return '';
   };
 
   return (
@@ -173,10 +183,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   readIndicator: {
-    color: '#4FC3F7', // light blue for read
+    color: '#4FC3F7', // light blue for read (double check)
   },
   unreadIndicator: {
-    color: 'rgba(255, 255, 255, 0.7)', // white for unread
+    color: 'rgba(255, 255, 255, 0.6)', // semi-transparent white for sent but not read (single check)
   },
 });
 

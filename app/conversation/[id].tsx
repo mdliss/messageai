@@ -3,12 +3,13 @@
  * displays messages, allows sending, implements optimistic UI, handles read receipts
  */
 
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    AppState,
     FlatList,
     KeyboardAvoidingView,
     Platform,
@@ -21,26 +22,26 @@ import {
 import MessageBubble from '../../src/components/MessageBubble';
 import TypingIndicator from '../../src/components/TypingIndicator';
 import { useAuth } from '../../src/hooks/useAuth';
+import { useConversationMembers } from '../../src/hooks/useConversationMembers';
 import { useMessages } from '../../src/hooks/useMessages';
 import { useTyping } from '../../src/hooks/useTyping';
 import { firestore } from '../../src/services/firebase';
 import {
     getConversation,
-    getConversationMembers,
     sendMessage,
     updateLastSeenAt,
 } from '../../src/services/firestore';
 import { clearTyping, setTyping } from '../../src/services/rtdb';
-import { Conversation, ConversationMember, Message, User } from '../../src/types';
+import { Conversation, Message, User } from '../../src/types';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentUser } = useAuth();
   const { messages, loading: messagesLoading, error: messagesError } = useMessages(id);
+  const { members, loading: membersLoading } = useConversationMembers(id);
   const { typingUserIds } = useTyping(id, currentUser?.uid);
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [members, setMembers] = useState<ConversationMember[]>([]);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [conversationLoading, setConversationLoading] = useState(true);
   
@@ -55,7 +56,7 @@ export default function ConversationScreen() {
   console.log('[conversation] current user:', currentUser?.uid);
   console.log('[conversation] messages count:', messages.length);
 
-  // fetch conversation details and members on mount
+  // fetch conversation details on mount
   useEffect(() => {
     if (!id || !currentUser) return;
 
@@ -74,11 +75,6 @@ export default function ConversationScreen() {
         }
         setConversation(conv);
         console.log('[conversation] timestamp:', new Date().toISOString(), '- conversation loaded:', conv.cid);
-
-        // fetch members for read receipts
-        const fetchedMembers = await getConversationMembers(id);
-        setMembers(fetchedMembers);
-        console.log('[conversation] timestamp:', new Date().toISOString(), '- members loaded:', fetchedMembers.length);
 
         // fetch other user's details for 1-on-1 chat
         if (!conv.isGroup) {
@@ -163,10 +159,82 @@ export default function ConversationScreen() {
     return () => {
       if (id && currentUser) {
         console.log('[conversation] timestamp:', new Date().toISOString(), '- clearing typing status on unmount');
+        
+        // clear timeout
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
+        }
+        
+        // clear typing indicator
         clearTyping(id, currentUser.uid).catch((error) => {
           console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing on unmount:', error);
         });
       }
+    };
+  }, [id, currentUser]);
+
+  // clear typing status when screen loses focus or app goes to background
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[conversation] timestamp:', new Date().toISOString(), '- screen gained focus');
+      
+      // update lastSeenAt when returning to screen
+      if (id && currentUser) {
+        updateLastSeenAt(id, currentUser.uid).catch((error) => {
+          console.error('[conversation] timestamp:', new Date().toISOString(), '- error updating lastSeenAt on focus:', error);
+        });
+      }
+      
+      return () => {
+        console.log('[conversation] timestamp:', new Date().toISOString(), '- screen lost focus, clearing typing');
+        
+        // clear typing when screen loses focus
+        if (id && currentUser) {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+          }
+          
+          clearTyping(id, currentUser.uid).catch((error) => {
+            console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing on blur:', error);
+          });
+        }
+      };
+    }, [id, currentUser])
+  );
+
+  // handle app state changes (background/foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      console.log('[conversation] timestamp:', new Date().toISOString(), '- app state changed to:', nextAppState);
+      
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // clear typing when app goes to background
+        if (id && currentUser) {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+          }
+          
+          clearTyping(id, currentUser.uid).catch((error) => {
+            console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing on background:', error);
+          });
+        }
+      }
+      
+      if (nextAppState === 'active') {
+        // update lastSeenAt when app comes back to foreground
+        if (id && currentUser) {
+          updateLastSeenAt(id, currentUser.uid).catch((error) => {
+            console.error('[conversation] timestamp:', new Date().toISOString(), '- error updating lastSeenAt on active:', error);
+          });
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
     };
   }, [id, currentUser]);
 
@@ -244,14 +312,20 @@ export default function ConversationScreen() {
 
     // check if all other members have seen this message
     const otherMembers = members.filter((m) => m.uid !== currentUser.uid);
-    if (otherMembers.length === 0) return false;
+    if (otherMembers.length === 0) {
+      console.log('[conversation] isMessageRead - no other members found for message:', message.mid);
+      return false;
+    }
 
     const allRead = otherMembers.every((member) => {
       const memberLastSeen = new Date(member.lastSeenAt).getTime();
       const messageCreated = new Date(message.createdAt).getTime();
-      return memberLastSeen >= messageCreated;
+      const isRead = memberLastSeen >= messageCreated;
+      console.log('[conversation] checking read status - member:', member.uid, '- lastSeen:', member.lastSeenAt, '- messageCreated:', message.createdAt, '- isRead:', isRead);
+      return isRead;
     });
 
+    console.log('[conversation] message:', message.mid, '- allRead:', allRead);
     return allRead;
   };
 
@@ -287,7 +361,7 @@ export default function ConversationScreen() {
   };
 
   // render loading state
-  if (conversationLoading || messagesLoading) {
+  if (conversationLoading || messagesLoading || membersLoading) {
     return (
       <>
         <Stack.Screen options={{ title: 'loading...' }} />
