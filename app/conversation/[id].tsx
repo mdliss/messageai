@@ -19,8 +19,10 @@ import {
     View,
 } from 'react-native';
 import MessageBubble from '../../src/components/MessageBubble';
+import TypingIndicator from '../../src/components/TypingIndicator';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useMessages } from '../../src/hooks/useMessages';
+import { useTyping } from '../../src/hooks/useTyping';
 import { firestore } from '../../src/services/firebase';
 import {
     getConversation,
@@ -28,12 +30,14 @@ import {
     sendMessage,
     updateLastSeenAt,
 } from '../../src/services/firestore';
+import { clearTyping, setTyping } from '../../src/services/rtdb';
 import { Conversation, ConversationMember, Message, User } from '../../src/types';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentUser } = useAuth();
   const { messages, loading: messagesLoading, error: messagesError } = useMessages(id);
+  const { typingUserIds } = useTyping(id, currentUser?.uid);
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [members, setMembers] = useState<ConversationMember[]>([]);
@@ -42,8 +46,10 @@ export default function ConversationScreen() {
   
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
+  const [typingUserNames, setTypingUserNames] = useState<string[]>([]);
 
   const flatListRef = useRef<FlatList>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   console.log('[conversation] timestamp:', new Date().toISOString(), '- screen rendered for conversation:', id);
   console.log('[conversation] current user:', currentUser?.uid);
@@ -115,6 +121,86 @@ export default function ConversationScreen() {
     updateLastSeen();
   }, [id, currentUser]);
 
+  // fetch user names for typing users
+  useEffect(() => {
+    if (typingUserIds.length === 0) {
+      setTypingUserNames([]);
+      return;
+    }
+
+    console.log('[conversation] timestamp:', new Date().toISOString(), '- fetching names for typing users:', typingUserIds);
+
+    const fetchTypingUserNames = async () => {
+      try {
+        const names: string[] = [];
+
+        for (const userId of typingUserIds) {
+          // check if it's the other user in 1-on-1 chat
+          if (otherUser && userId === otherUser.uid) {
+            names.push(otherUser.displayName);
+          } else {
+            // fetch user from firestore
+            const userDoc = await getDoc(doc(firestore, 'users', userId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data() as User;
+              names.push(userData.displayName);
+            }
+          }
+        }
+
+        console.log('[conversation] timestamp:', new Date().toISOString(), '- fetched typing user names:', names);
+        setTypingUserNames(names);
+      } catch (error: any) {
+        console.error('[conversation] timestamp:', new Date().toISOString(), '- error fetching typing user names:', error);
+      }
+    };
+
+    fetchTypingUserNames();
+  }, [typingUserIds, otherUser]);
+
+  // clear typing status on unmount
+  useEffect(() => {
+    return () => {
+      if (id && currentUser) {
+        console.log('[conversation] timestamp:', new Date().toISOString(), '- clearing typing status on unmount');
+        clearTyping(id, currentUser.uid).catch((error) => {
+          console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing on unmount:', error);
+        });
+      }
+    };
+  }, [id, currentUser]);
+
+  // handle text input change with debounced typing indicator
+  const handleTextChange = (text: string) => {
+    setInputText(text);
+
+    if (!id || !currentUser) return;
+
+    // clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (text.trim().length > 0) {
+      // set typing to true
+      setTyping(id, currentUser.uid, true).catch((error) => {
+        console.error('[conversation] timestamp:', new Date().toISOString(), '- error setting typing status:', error);
+      });
+
+      // set timeout to clear typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        setTyping(id, currentUser.uid, false).catch((error) => {
+          console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing status:', error);
+        });
+      }, 3000);
+    } else {
+      // clear typing if input is empty
+      clearTyping(id, currentUser.uid).catch((error) => {
+        console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing status:', error);
+      });
+    }
+  };
+
   // handle send message
   const handleSendMessage = async () => {
     if (!inputText.trim() || !id || !currentUser) {
@@ -127,6 +213,14 @@ export default function ConversationScreen() {
     const messageText = inputText.trim();
     setInputText(''); // clear input immediately for responsive UI
     setSending(true);
+
+    // clear typing indicator immediately on send
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    clearTyping(id, currentUser.uid).catch((error) => {
+      console.error('[conversation] timestamp:', new Date().toISOString(), '- error clearing typing on send:', error);
+    });
 
     try {
       await sendMessage(id, currentUser.uid, messageText);
@@ -257,6 +351,9 @@ export default function ConversationScreen() {
           }}
         />
 
+        {/* typing indicator */}
+        <TypingIndicator typingUserNames={typingUserNames} />
+
         {/* input area */}
         <View style={styles.inputContainer}>
           <TextInput
@@ -264,7 +361,7 @@ export default function ConversationScreen() {
             placeholder="type a message..."
             placeholderTextColor="#999"
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={handleTextChange}
             multiline
             maxLength={5000}
             editable={!sending}
