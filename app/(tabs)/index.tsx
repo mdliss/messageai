@@ -7,6 +7,15 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
 
+// test firebase initialization
+import { auth, firestore, rtdb, storage } from '@/src/services/firebase';
+
+console.log('🔥 firebase services test:');
+console.log('  auth:', !!auth);
+console.log('  firestore:', !!firestore);
+console.log('  rtdb:', !!rtdb);
+console.log('  storage:', !!storage);
+
 export default function HomeScreen() {
   return (
     <ParallaxScrollView
