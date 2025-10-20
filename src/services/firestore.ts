@@ -298,7 +298,7 @@ export async function getMessages(
     const messagesRef = collection(firestore, 'conversations', conversationId, 'messages');
     let q = query(
       messagesRef,
-      orderBy('createdAt', 'desc'),
+      orderBy('createdAt', 'asc'),
       limit(messageLimit)
     );
 
@@ -306,7 +306,7 @@ export async function getMessages(
     if (lastDoc) {
       q = query(
         messagesRef,
-        orderBy('createdAt', 'desc'),
+        orderBy('createdAt', 'asc'),
         startAfter(lastDoc),
         limit(messageLimit)
       );
@@ -346,7 +346,7 @@ export function subscribeToMessages(
   const messagesRef = collection(firestore, 'conversations', conversationId, 'messages');
   const q = query(
     messagesRef,
-    orderBy('createdAt', 'desc'),
+    orderBy('createdAt', 'asc'),
     limit(messageLimit)
   );
 
