@@ -7,17 +7,17 @@ import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    AppState,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  AppState,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import MessageBubble from '../../src/components/MessageBubble';
 import TypingIndicator from '../../src/components/TypingIndicator';
@@ -27,9 +27,9 @@ import { useMessages } from '../../src/hooks/useMessages';
 import { useTyping } from '../../src/hooks/useTyping';
 import { firestore } from '../../src/services/firebase';
 import {
-    getConversation,
-    sendMessage,
-    updateLastSeenAt,
+  getConversation,
+  sendMessage,
+  updateLastSeenAt,
 } from '../../src/services/firestore';
 import { clearTyping, setTyping } from '../../src/services/rtdb';
 import { Conversation, Message, User } from '../../src/types';
@@ -312,6 +312,7 @@ export default function ConversationScreen() {
 
     // check if all other members have seen this message
     const otherMembers = members.filter((m) => m.uid !== currentUser.uid);
+    console.log('[conversation] isMessageRead for message:', message.mid, '- total members:', members.length, '- other members:', otherMembers.length);
     if (otherMembers.length === 0) {
       console.log('[conversation] isMessageRead - no other members found for message:', message.mid);
       return false;

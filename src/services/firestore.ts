@@ -133,11 +133,12 @@ export async function createConversation(
 
     // create member subdocuments for each participant
     const now = new Date().toISOString();
+    const epoch = new Date(0).toISOString(); // 1970-01-01 - ensures messages aren't marked as read until user actually views them
     const memberPromises = memberIds.map(async (memberId) => {
       const memberData: ConversationMember = {
         uid: memberId,
         joinedAt: now,
-        lastSeenAt: now,
+        lastSeenAt: epoch, // start at epoch so messages only show as read after user actually opens chat
         muted: false,
       };
 

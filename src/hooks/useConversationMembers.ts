@@ -5,8 +5,8 @@
  * crucial for accurate read receipts
  */
 
-import { useEffect, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { firestore } from '../services/firebase';
 import { ConversationMember } from '../types';
 
