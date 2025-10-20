@@ -7,6 +7,7 @@ import {
     addDoc,
     collection,
     doc,
+    DocumentSnapshot,
     getDoc,
     getDocs,
     limit,
@@ -16,8 +17,7 @@ import {
     setDoc,
     startAfter,
     updateDoc,
-    where,
-    DocumentSnapshot
+    where
 } from 'firebase/firestore';
 import { Conversation, ConversationMember, Message } from '../types';
 import { firestore } from './firebase';

@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Message } from '../types';
 import { subscribeToMessages } from '../services/firestore';
+import { Message } from '../types';
 
 export function useMessages(conversationId: string | undefined) {
   const [messages, setMessages] = useState<Message[]>([]);

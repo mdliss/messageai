@@ -3,21 +3,21 @@
  * allows users to create new account with email/password
  */
 
+import { useAuth } from '@/src/hooks/useAuth';
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Link, router } from 'expo-router';
-import { useAuth } from '@/src/hooks/useAuth';
 
 export default function RegisterScreen() {
   const { signUp, loading } = useAuth();

@@ -4,31 +4,31 @@
  */
 
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import MessageBubble from '../../src/components/MessageBubble';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useMessages } from '../../src/hooks/useMessages';
+import { firestore } from '../../src/services/firebase';
 import {
-  getConversation,
-  getConversationMembers,
-  sendMessage,
-  updateLastSeenAt,
+    getConversation,
+    getConversationMembers,
+    sendMessage,
+    updateLastSeenAt,
 } from '../../src/services/firestore';
 import { Conversation, ConversationMember, Message, User } from '../../src/types';
-import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '../../src/services/firebase';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
