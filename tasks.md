@@ -22,7 +22,7 @@
     npx expo install react-native-paper react-native-safe-area-context
     ```
 
-- [ ] **1.3: Configure Expo Router**
+- [x] **1.3: Configure Expo Router**
   - Files to update: `app.json` (add `expo-router` scheme)
   - Files to create: `app/_layout.tsx`, `app/index.tsx`
   - Set up file-based routing structure
@@ -49,7 +49,7 @@
     EXPO_PUBLIC_FIREBASE_DATABASE_URL=
     ```
 
-- [ ] **1.6: Create Firebase Service File**
+- [x] **1.6: Create Firebase Service File**
   - Files to create: `src/services/firebase.ts`
   - Initialize Firebase app with config
   - Enable Firestore offline persistence:
@@ -65,12 +65,12 @@
   - Export `auth`, `db` (Firestore), `rtdb` (Realtime Database), `storage`, `messaging`
   - Add connection test (console.log on successful init)
 
-- [ ] **1.7: Configure Git & .gitignore**
+- [x] **1.7: Configure Git & .gitignore**
   - Files to create/update: `.gitignore`
   - Add: `.env`, `node_modules/`, `.expo/`, `dist/`, `ios/`, `android/`
   - Commit initial setup
 
-- [ ] **1.8: Create README with Setup Instructions**
+- [x] **1.8: Create README with Setup Instructions**
   - Files to create: `README.md`
   - Include: Prerequisites, setup steps, env variables, run commands
   - Add: Project structure overview
@@ -93,13 +93,13 @@
 
 ### Tasks:
 
-- [ ] **2.1: Create Auth Context**
+- [x] **2.1: Create Auth Context**
   - Files to create: `src/context/AuthContext.tsx`
   - Provide: `currentUser`, `loading`, `signUp()`, `signIn()`, `signInWithGoogle()`, `signOut()`
   - Use Firebase `onAuthStateChanged` listener
   - Store user profile in Firestore `/users/{uid}` on signup
 
-- [ ] **2.2: Create Auth Service**
+- [x] **2.2: Create Auth Service**
   - Files to create: `src/services/auth.ts`
   - Functions:
     - `signUpWithEmail(email, password, displayName)`
@@ -109,12 +109,12 @@
     - `updateProfile(displayName, photoURL)`
   - Display name logic: Google name OR email prefix
 
-- [ ] **2.3: Create useAuth Hook**
+- [x] **2.3: Create useAuth Hook**
   - Files to create: `src/hooks/useAuth.ts`
   - Return auth context values
   - Throw error if used outside AuthProvider
 
-- [ ] **2.4: Build Login Screen**
+- [x] **2.4: Build Login Screen**
   - Files to create: `app/(auth)/login.tsx`
   - Form fields: email, password
   - "Sign In" button
@@ -122,7 +122,7 @@
   - Link to register screen
   - Error handling (show alert)
 
-- [ ] **2.5: Build Register Screen**
+- [x] **2.5: Build Register Screen**
   - Files to create: `app/(auth)/register.tsx`
   - Form fields: display name, email, password, confirm password
   - "Sign Up" button
@@ -130,13 +130,13 @@
   - Link to login screen
   - Error handling
 
-- [ ] **2.6: Create Protected Route Logic**
+- [x] **2.6: Create Protected Route Logic**
   - Files to update: `app/_layout.tsx`
   - Wrap app with AuthProvider
   - Redirect to login if not authenticated
   - Show loading spinner during auth check
 
-- [ ] **2.7: Create User Profile Screen**
+- [x] **2.7: Create User Profile Screen**
   - Files to create: `app/(tabs)/profile.tsx`
   - Display: user name, email, photo
   - "Edit Profile" button (optional)
